@@ -200,7 +200,7 @@ module CollectiveIdea #:nodoc:
           return unless has_depth_column?
 
           in_tenacious_transaction do
-            reload
+            reload_nested_set
             update_depth(level)
           end
         end
