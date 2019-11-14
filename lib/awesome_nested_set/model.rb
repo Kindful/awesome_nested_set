@@ -183,7 +183,7 @@ module CollectiveIdea #:nodoc:
 
         def right_most_node
           @right_most_node ||= nested_set_scope_without_default_scope(
-            :order => "#{quoted_right_column_full_name} desc"
+            :order => "#{quoted_right_column_full_name} desc nulls last"
           ).first
         end
 
