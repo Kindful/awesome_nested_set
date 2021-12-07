@@ -52,7 +52,7 @@ module CollectiveIdea #:nodoc:
 
           # Iterates over tree elements and determines the current level in the tree.
           # Only accepts default ordering, odering by an other column than lft
-          # does not work. This method is much more efficent than calling level
+          # does not work. This method is much more efficient than calling level
           # because it doesn't require any additional database queries.
           #
           # Example:
@@ -79,9 +79,8 @@ module CollectiveIdea #:nodoc:
           end
 
           def nested_set_scope(options = {})
-            options = {:order => quoted_order_column_full_name}.merge(options)
-
-            where(options[:conditions]).order(options.delete(:order))
+            order = scope_order_from_options(options)
+            where(options[:conditions]).order(order)
           end
 
           def primary_key_scope(id)
@@ -94,6 +93,12 @@ module CollectiveIdea #:nodoc:
 
           def roots
             nested_set_scope.children_of nil
+          end
+
+          private
+
+          def scope_order_from_options(options)
+            options.fetch(:order, order_column_name)
           end
         end # end class methods
 
@@ -139,13 +144,9 @@ module CollectiveIdea #:nodoc:
         # performs finds on the base ActiveRecord class, using the :scope
         # declared in the acts_as_nested_set declaration.
         def nested_set_scope(options = {})
-          if (scopes = Array(acts_as_nested_set_options[:scope])).any?
-            options[:conditions] = scopes.inject({}) do |conditions,attr|
-              conditions.merge attr => self[attr]
-            end
-          end
+          add_scope_conditions_to_options(options)
 
-          self.class.base_class.nested_set_scope options
+          self.class.base_class.default_scoped.nested_set_scope options
         end
 
         # Separate an other `nested_set_scope` for unscoped model
@@ -153,10 +154,10 @@ module CollectiveIdea #:nodoc:
         # Only activerecord callbacks need unscoped model to handle the nested set records
         # And class level `nested_set_scope` seems just for query `root` `child` .. etc
         # I think we don't have to provide unscoped `nested_set_scope` in class level.
-        def nested_set_scope_without_default_scope(*args)
-          self.class.base_class.unscoped do
-            nested_set_scope(*args)
-          end
+        def nested_set_scope_without_default_scope(options = {})
+          add_scope_conditions_to_options(options)
+
+          self.class.base_class.unscoped.nested_set_scope options
         end
 
         def to_text
@@ -166,6 +167,13 @@ module CollectiveIdea #:nodoc:
         end
 
         protected
+
+        def add_scope_conditions_to_options(options)
+          scopes = scope_column_names
+          return if scopes.empty?
+
+          options[:conditions] = scopes.map { |attr| [attr, self[attr] ] }.to_h
+        end
 
         def without_self(scope)
           return scope if new_record?
@@ -183,7 +191,7 @@ module CollectiveIdea #:nodoc:
 
         def right_most_node
           @right_most_node ||= nested_set_scope_without_default_scope(
-            :order => "#{quoted_right_column_full_name} desc nulls last"
+            :order => "#{right_column_name} desc nulls last"
           ).first
         end
 
@@ -237,12 +245,12 @@ module CollectiveIdea #:nodoc:
 
           # Decrease the counter for all old parents
           if old_parent = self.parent
-            self.class.decrement_counter(acts_as_nested_set_options[:counter_cache], old_parent)
+            old_parent.class.decrement_counter(acts_as_nested_set_options[:counter_cache], old_parent)
           end
 
           # Increase the counter for all new parents
           if new_parent = self.reload.parent
-            self.class.increment_counter(acts_as_nested_set_options[:counter_cache], new_parent)
+            new_parent.class.increment_counter(acts_as_nested_set_options[:counter_cache], new_parent)
           end
         end
 

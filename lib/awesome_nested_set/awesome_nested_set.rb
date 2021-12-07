@@ -5,7 +5,7 @@ module CollectiveIdea #:nodoc:
   module Acts #:nodoc:
     module NestedSet #:nodoc:
 
-      # This acts provides Nested Set functionality. Nested Set is a smart way to implement
+      # This provides Nested Set functionality. Nested Set is a smart way to implement
       # an _ordered_ tree, with the added feature that you can select the children and all of their
       # descendants with a single query. The drawback is that insertion or move need some complex
       # sql queries. But everything is done here by this module!
@@ -15,8 +15,8 @@ module CollectiveIdea #:nodoc:
       #
       # == API
       #
-      # Methods names are aligned with acts_as_tree as much as possible to make replacment from one
-      # by another easier.
+      # Methods names are aligned with acts_as_tree as much as possible to make transition from one
+      # to another easier.
       #
       #   item.children.create(:name => "child1")
       #
@@ -25,8 +25,8 @@ module CollectiveIdea #:nodoc:
       #
       # * +:parent_column+ - specifies the column name to use for keeping the position integer (default: parent_id)
       # * +:primary_column+ - specifies the column name to use as the inverse of the parent column (default: id)
-      # * +:left_column+ - column name for left boundry data, default "lft"
-      # * +:right_column+ - column name for right boundry data, default "rgt"
+      # * +:left_column+ - column name for left boundary data, default "lft"
+      # * +:right_column+ - column name for right boundary data, default "rgt"
       # * +:depth_column+ - column name for the depth data, default "depth"
       # * +:scope+ - restricts what is to be considered a list. Given a symbol, it'll attach "_id"
       #   (if it hasn't been already) and use that as the foreign key restriction. You
@@ -87,8 +87,8 @@ module CollectiveIdea #:nodoc:
           ) if acts_as_nested_set_options[ar_callback]
         end
 
-        has_many :children, -> { order(quoted_order_column_full_name) },
-                 has_many_children_options
+        has_many :children, -> { order(order_column_name) },
+                 **has_many_children_options
       end
 
       def acts_as_nested_set_relate_parent!
@@ -98,11 +98,11 @@ module CollectiveIdea #:nodoc:
           :primary_key => primary_column_name,
           :counter_cache => acts_as_nested_set_options[:counter_cache],
           :inverse_of => (:children unless acts_as_nested_set_options[:polymorphic]),
-          :polymorphic => acts_as_nested_set_options[:polymorphic],
           :touch => acts_as_nested_set_options[:touch]
         }
+        options[:polymorphic] = true if acts_as_nested_set_options[:polymorphic]
         options[:optional] = true if ActiveRecord::VERSION::MAJOR >= 5
-        belongs_to :parent, options
+        belongs_to :parent, **options
       end
 
       def acts_as_nested_set_default_options
