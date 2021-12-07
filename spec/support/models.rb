@@ -23,6 +23,11 @@ class OrderedCategory < ActiveRecord::Base
   acts_as_nested_set :order_column => 'name'
 end
 
+class HashOrderedCategory < ActiveRecord::Base
+  self.table_name = 'categories'
+  acts_as_nested_set :order_column => { :name => :desc }
+end
+
 class RenamedColumns < ActiveRecord::Base
   acts_as_nested_set :parent_column => 'mother_id',
                      :left_column => 'red',
@@ -94,13 +99,13 @@ end
 class Order < ActiveRecord::Base
   acts_as_nested_set
 
-  default_scope -> { order(:name) }
+  default_scope -> { order(name: :asc) }
 end
 
 class Position < ActiveRecord::Base
   acts_as_nested_set
 
-  default_scope -> { order(:position) }
+  default_scope -> { order(position: :asc) }
 end
 
 class NoDepth < ActiveRecord::Base
@@ -155,7 +160,7 @@ class ScopedUser < ActiveRecord::Base
 end
 
 class Superclass < ActiveRecord::Base
-  acts_as_nested_set
+  acts_as_nested_set counter_cache: :children_count
   self.table_name = 'single_table_inheritance'
 end
 

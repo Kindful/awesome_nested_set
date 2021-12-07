@@ -1,12 +1,13 @@
 # Awesome Nested Set
 
-[![Build Status](https://travis-ci.org/collectiveidea/awesome_nested_set.svg?branch=master)](https://travis-ci.org/collectiveidea/awesome_nested_set) [![Code Climate](https://codeclimate.com/github/collectiveidea/awesome_nested_set.svg)](https://codeclimate.com/github/collectiveidea/awesome_nested_set) [![Dependency Status](https://gemnasium.com/collectiveidea/awesome_nested_set.svg)](https://gemnasium.com/collectiveidea/awesome_nested_set) [![Security](https://hakiri.io/github/collectiveidea/awesome_nested_set/master.svg)](https://hakiri.io/github/collectiveidea/awesome_nested_set/master)
+[![Build Status](https://travis-ci.org/collectiveidea/awesome_nested_set.svg?branch=master)](https://travis-ci.org/collectiveidea/awesome_nested_set) [![Code Climate](https://codeclimate.com/github/collectiveidea/awesome_nested_set.svg)](https://codeclimate.com/github/collectiveidea/awesome_nested_set) [![Security](https://hakiri.io/github/collectiveidea/awesome_nested_set/master.svg)](https://hakiri.io/github/collectiveidea/awesome_nested_set/master)
 
 
 Awesome Nested Set is an implementation of the nested set pattern for ActiveRecord models.
 It is a replacement for acts_as_nested_set and BetterNestedSet, but more awesome.
 
-Version 3.1 supports Rails 5 & 4. Version 2 supports Rails 3. Gem versions prior to 2.0 support Rails 2.
+Version 3.2 supports Rails 6, 3.1 supports Rails 5 & 4. Version 2 supports Rails 3. 
+Gem versions prior to 2.0 support Rails 2.
 
 ## What makes this so awesome?
 
@@ -31,22 +32,18 @@ function properly.
 
 ```ruby
 class CreateCategories < ActiveRecord::Migration
-  def self.up
+  def change
     create_table :categories do |t|
       t.string :name
-      t.integer :parent_id, :null => true, :index => true
-      t.integer :lft, :null => false, :index => true
-      t.integer :rgt, :null => false, :index => true
+      t.integer :parent_id, null: true, index: true
+      t.integer :lft, null: false, index: true
+      t.integer :rgt, null: false, index: true
 
       # optional fields
-      t.integer :depth, :null => false, :default => 0
-      t.integer :children_count, :null => false, :default => 0
-    end
-  end
-
-  def self.down
-    drop_table :categories
-  end
+      t.integer :depth, null: false, default: 0
+      t.integer :children_count, null: false, default: 0
+      t.timestamps
+   end
 end
 ```
 
@@ -65,6 +62,7 @@ Run `rake rdoc` to generate the API docs and see [CollectiveIdea::Acts::NestedSe
 You can pass various options to `acts_as_nested_set` macro. Configuration options are:
 
 * `parent_column`: specifies the column name to use for keeping the position integer (default: parent_id)
+* `primary_column`: specifies the column name to use as the inverse of the parent column (default: id)
 * `left_column`: column name for left boundary data (default: lft)
 * `right_column`: column name for right boundary data (default: rgt)
 * `depth_column`: column name for the depth data default (default: depth)
@@ -178,6 +176,7 @@ class AddNestedToCategories < ActiveRecord::Migration
     add_column :categories, :children_count, :integer
 
     # This is necessary to update :lft and :rgt columns
+    Category.reset_column_information
     Category.rebuild!
   end
 

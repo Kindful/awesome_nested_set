@@ -140,6 +140,12 @@ describe "AwesomeNestedSet" do
       expect(Category.root).to eq(categories(:top_level))
     end
 
+    it "root_class_method with scope" do
+      categories(:top_level).update_attribute :organization_id, 999999999
+      expect(ScopedCategory.where(organization_id: 999999999).root.id).to eq(categories(:top_level).id)
+      expect(ScopedCategory.where(organization_id: 1).root).to be_nil
+    end
+
     it "root" do
       expect(categories(:child_3).root).to eq(categories(:top_level))
     end
@@ -1098,6 +1104,27 @@ describe "AwesomeNestedSet" do
         expect { subject }.to change { new_parent.reload.children_count }.by(1)
       end
     end
+
+    context "when class is an STI" do
+      let(:sti_subclass1) { Subclass1.create(name: "Subclass1") }
+      let(:sti_subclass2) { Subclass2.create(name: "Subclass2") }
+      let(:sti_subclass3) { Subclass2.create(name: "Subclass3") }
+
+      # https://github.com/collectiveidea/awesome_nested_set/issues/415
+      it 'should update counter cache of a parent' do
+        sti_subclass2.move_to_child_of sti_subclass1
+
+        sti_subclass1.reload
+        expect(sti_subclass1.children_count).to be 1
+
+        sti_subclass2.move_to_child_of sti_subclass3
+
+        sti_subclass1.reload
+        sti_subclass3.reload
+        expect(sti_subclass1.children_count).to be 0
+        expect(sti_subclass3.children_count).to be 1
+      end
+    end
   end
 
   describe "association callbacks on children" do
@@ -1192,12 +1219,21 @@ describe "AwesomeNestedSet" do
 
   describe 'specifying custom sort column' do
     it "should sort by the default sort column" do
-      expect(Category.order_column).to eq('lft')
+      expect(Category.order_column_name).to eq('lft')
     end
 
     it "should sort by custom sort column" do
       expect(OrderedCategory.acts_as_nested_set_options[:order_column]).to eq('name')
-      expect(OrderedCategory.order_column).to eq('name')
+      expect(OrderedCategory.order_column_name).to eq('name')
+      expect(OrderedCategory.first.children.explain).to include('ORDER BY name')
+    end
+
+    it "should sort by custom hash sort" do
+      expect(HashOrderedCategory.acts_as_nested_set_options[:order_column]).to eq({ :name => :desc })
+      expect(HashOrderedCategory.order_column_name).to eq({ :name => :desc })
+      expect(HashOrderedCategory.first.children.explain).to include(
+        "ORDER BY #{HashOrderedCategory.quoted_table_name}.#{HashOrderedCategory.connection.quote_column_name(:name)} DESC"
+      )
     end
   end
 
