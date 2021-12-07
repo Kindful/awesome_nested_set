@@ -173,7 +173,7 @@ module CollectiveIdea #:nodoc:
         end
 
         def store_new_parent
-          @move_to_new_parent_id = send("#{parent_column_name}_changed?") ? parent_id : false
+          @move_to_new_parent_id = send("will_save_change_to_#{parent_column_name}?") ? parent_id : false
           true # force callback to return true
         end
 
@@ -183,7 +183,7 @@ module CollectiveIdea #:nodoc:
 
         def right_most_node
           @right_most_node ||= nested_set_scope_without_default_scope(
-            :order => "#{quoted_right_column_full_name} desc"
+            :order => "#{quoted_right_column_full_name} desc nulls last"
           ).first
         end
 
@@ -200,7 +200,7 @@ module CollectiveIdea #:nodoc:
           return unless has_depth_column?
 
           in_tenacious_transaction do
-            reload
+            reload_nested_set
             update_depth(level)
           end
         end
