@@ -1,6 +1,6 @@
 # Awesome Nested Set
 
-[![Build Status](https://travis-ci.org/collectiveidea/awesome_nested_set.svg?branch=master)](https://travis-ci.org/collectiveidea/awesome_nested_set) [![Code Climate](https://codeclimate.com/github/collectiveidea/awesome_nested_set.svg)](https://codeclimate.com/github/collectiveidea/awesome_nested_set) [![Security](https://hakiri.io/github/collectiveidea/awesome_nested_set/master.svg)](https://hakiri.io/github/collectiveidea/awesome_nested_set/master)
+[![CI](https://github.com/collectiveidea/awesome_nested_set/actions/workflows/ci.yml/badge.svg)](https://github.com/collectiveidea/awesome_nested_set/actions/workflows/ci.yml) [![Code Climate](https://codeclimate.com/github/collectiveidea/awesome_nested_set.svg)](https://codeclimate.com/github/collectiveidea/awesome_nested_set)
 
 
 Awesome Nested Set is an implementation of the nested set pattern for ActiveRecord models.
@@ -43,7 +43,8 @@ class CreateCategories < ActiveRecord::Migration
       t.integer :depth, null: false, default: 0
       t.integer :children_count, null: false, default: 0
       t.timestamps
-   end
+    end
+  end
 end
 ```
 
