@@ -191,7 +191,7 @@ module CollectiveIdea #:nodoc:
 
         def right_most_node
           @right_most_node ||= nested_set_scope_without_default_scope(
-            :order => "#{right_column_name} desc nulls last"
+            :order => "#{right_column_name} #{Arel.sql('desc nulls last')}"
           ).first
         end
 
